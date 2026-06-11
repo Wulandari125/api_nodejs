@@ -18,7 +18,7 @@ app.get("/status", (req, res) => {
 app.post("/backup", async (req, res) => {
     try {
         let nama = req.body.nama_backup;
-        let dtx = atob(req.body.dtx);
+        let dtx = Buffer.from(req.body.dtx, "base64").toString("utf-8");
 
         let id = Date.now();
         let arr_data = dtx.split("#");
