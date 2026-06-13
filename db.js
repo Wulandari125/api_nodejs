@@ -47,8 +47,88 @@ const tambahTransaksi = async (idx, id, waktux, nominalx, jenisx, deskripsix) =>
     }
 };
 
+const getBackupTerbaru = async () => {
+    const db = await buatKoneksi();
+
+    try {
+        const [rows] = await db.execute(`
+            SELECT *
+            FROM backup
+            ORDER BY waktu DESC
+            LIMIT 1
+        `);
+
+        await db.end();
+        return rows;
+    } catch (err) {
+        console.log(err);
+        await db.end();
+        return [];
+    }
+};
+
+const getDetailBackup = async (idBackup) => {
+    const db = await buatKoneksi();
+
+    try {
+        const [rows] = await db.execute(`
+            SELECT *
+            FROM backup_transaksi
+            WHERE id_backup = ?
+            ORDER BY waktu DESC
+        `, [idBackup]);
+
+        await db.end();
+        return rows;
+    } catch (err) {
+        console.log(err);
+        await db.end();
+        return [];
+    }
+};
+
+const totalBackup = async () => {
+    const db = await buatKoneksi();
+
+    try {
+        const [rows] = await db.execute(`
+            SELECT COUNT(*) AS total
+            FROM backup
+        `);
+
+        await db.end();
+        return rows;
+    } catch (err) {
+        console.log(err);
+        await db.end();
+        return [{ total: 0 }];
+    }
+};
+
+const totalTransaksi = async () => {
+    const db = await buatKoneksi();
+
+    try {
+        const [rows] = await db.execute(`
+            SELECT COUNT(*) AS total
+            FROM backup_transaksi
+        `);
+
+        await db.end();
+        return rows;
+    } catch (err) {
+        console.log(err);
+        await db.end();
+        return [{ total: 0 }];
+    }
+};
+
 module.exports = {
     buatKoneksi,
     tambahBackup,
-    tambahTransaksi
+    tambahTransaksi,
+    getBackupTerbaru,
+    getDetailBackup,
+    totalBackup,
+    totalTransaksi
 };

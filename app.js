@@ -74,6 +74,39 @@ app.post("/backup", async (req, res) => {
     }
 });
 
+app.get("/monitoring", async (req, res) => {
+    try {
+
+        let backupTerbaru = await db.getBackupTerbaru();
+
+        let detail = [];
+
+        if (backupTerbaru.length > 0) {
+            detail = await db.getDetailBackup(
+                backupTerbaru[0].id
+            );
+        }
+
+        return res.status(200).json({
+            total_backup: (await db.totalBackup())[0].total,
+            total_transaksi: (await db.totalTransaksi())[0].total,
+            backup_terbaru: backupTerbaru,
+            detail: detail
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        return res.status(500).json({
+            kode: "00",
+            status: "ERROR SERVER",
+            pesan: err.message
+        });
+
+    }
+});
+
 // Untuk localhost
 if (process.env.NODE_ENV !== "production") {
     const port = 3000;
