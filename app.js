@@ -1,8 +1,17 @@
+const Pusher = require("pusher");
 const express = require("express");
 const cors = require("cors");
 const db = require("./db.js");
 
 const app = express();
+
+const pusher = new Pusher({
+    appId: "2167066",
+    key: "2bf1da82b22a4c6d7405",
+    secret: "03c8214fe7328ca4180d",
+    cluster: "ap1",
+    useTLS: true
+});
 
 app.use(cors());
 app.use(express.json());
@@ -17,6 +26,7 @@ app.get("/status", (req, res) => {
 
 app.post("/backup", async (req, res) => {
     try {
+
         let nama = req.body.nama_backup;
         let dtx = Buffer.from(req.body.dtx, "base64").toString("utf-8");
 
@@ -26,10 +36,12 @@ app.post("/backup", async (req, res) => {
         let proses = await db.tambahBackup(id, nama, "nodejs");
 
         if (proses == "1") {
+
             let berhasil = 0;
             let gagal = 0;
 
             for (let k of arr_data) {
+
                 let arr_data2 = k.split("|");
 
                 let idx = arr_data2[0];
@@ -47,8 +59,35 @@ app.post("/backup", async (req, res) => {
                     deskripsix
                 );
 
-                proses2 == "1" ? berhasil++ : gagal++;
+                proses2 == "1"
+                    ? berhasil++
+                    : gagal++;
             }
+
+            // ==========================
+            // REALTIME PUSHER
+            // ==========================
+            const backupTerbaru = await db.getBackupTerbaru();
+
+            let detail = [];
+
+            if (backupTerbaru.length > 0) {
+                detail = await db.getDetailBackup(
+                    backupTerbaru[0].id
+                );
+            }
+
+            await pusher.trigger(
+                "backup-channel",
+                "backup.created",
+                {
+                    nama_backup: backupTerbaru[0].nama,
+                    waktu: backupTerbaru[0].waktu,
+                    total_transaksi: detail.length,
+                    detail: detail,
+                    source: "nodejs"
+                }
+            );
 
             return res.status(200).json({
                 kode: "01",
@@ -56,6 +95,7 @@ app.post("/backup", async (req, res) => {
                 berhasil: berhasil,
                 gagal: gagal
             });
+
         }
 
         return res.status(500).json({
@@ -64,6 +104,7 @@ app.post("/backup", async (req, res) => {
         });
 
     } catch (err) {
+
         console.error(err);
 
         return res.status(500).json({
@@ -71,6 +112,7 @@ app.post("/backup", async (req, res) => {
             status: "ERROR SERVER",
             pesan: err.message
         });
+
     }
 });
 
@@ -109,11 +151,13 @@ app.get("/monitoring", async (req, res) => {
 
 // Untuk localhost
 if (process.env.NODE_ENV !== "production") {
+
     const port = 3000;
 
     app.listen(port, () => {
         console.log(`API Berjalan di Port: ${port}`);
     });
+
 }
 
 // Untuk Vercel
