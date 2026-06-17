@@ -59,14 +59,13 @@ app.post("/backup", async (req, res) => {
                     deskripsix
                 );
 
-                proses2 == "1"
-                    ? berhasil++
-                    : gagal++;
+                if (proses2 == "1") {
+                    berhasil++;
+                } else {
+                    gagal++;
+                }
             }
 
-            // ==========================
-            // REALTIME PUSHER
-            // ==========================
             const backupTerbaru = await db.getBackupTerbaru();
 
             let detail = [];
@@ -77,17 +76,33 @@ app.post("/backup", async (req, res) => {
                 );
             }
 
-            await pusher.trigger(
-                "backup-channel",
-                "backup.created",
-                {
-                    nama_backup: backupTerbaru[0].nama,
-                    waktu: backupTerbaru[0].waktu,
+            try {
+
+                const payload = {
+                    nama_backup: backupTerbaru[0]?.nama ?? nama,
+                    waktu: backupTerbaru[0]?.waktu ?? new Date(),
                     total_transaksi: detail.length,
                     detail: detail,
                     source: "nodejs"
-                }
-            );
+                };
+
+                console.log("=== KIRIM EVENT PUSHER ===");
+                console.log(payload);
+
+                await pusher.trigger(
+                    "backup-channel",
+                    "backup.created",
+                    payload
+                );
+
+                console.log("=== EVENT PUSHER BERHASIL DIKIRIM ===");
+
+            } catch (pusherError) {
+
+                console.error("=== PUSHER ERROR ===");
+                console.error(pusherError);
+
+            }
 
             return res.status(200).json({
                 kode: "01",
@@ -149,7 +164,6 @@ app.get("/monitoring", async (req, res) => {
     }
 });
 
-// Untuk localhost
 if (process.env.NODE_ENV !== "production") {
 
     const port = 3000;
@@ -160,5 +174,5 @@ if (process.env.NODE_ENV !== "production") {
 
 }
 
-// Untuk Vercel
 module.exports = app;
+
