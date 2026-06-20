@@ -174,5 +174,24 @@ if (process.env.NODE_ENV !== "production") {
 
 }
 
+app.get("/daftar_backup", async (req, res) => {
+    const dtbackup = await db.bacaBackup();
+    if(dtbackup == false){
+        res.send('{"kode":"00","pesan":"Data Backup Tidak Di Temukan"}');
+    }else{
+        res.send('{"kode":"01","pesan":"Data Backup Di Temukan","data":' + JSON.stringify(dtbackup) + '}');
+    }
+})
+
+app.post("/detail_backup", async (req, res) => {
+    let idbackup = req.body.idbackup;
+    const dtdetail = await db.bacaDetailBackup(idbackup);
+    if(dtdetail == false){
+        res.send('{"kode":"00","pesan":"Data Detail Backup Tidak Di Temukan"}');
+    }else{
+        res.send('{"kode":"01","pesan":"Data Detail Backup Di Temukan","data":' + JSON.stringify(dtdetail) + '}');
+    }
+})
+
 module.exports = app;
 
