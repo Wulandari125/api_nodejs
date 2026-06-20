@@ -131,23 +131,10 @@ const bacaBackup = async () => {
 }
 
 const bacaDetailBackup = async (id_backup) => {
-    // Jika id_backup tidak dikirim atau kosong, langsung kembalikan false agar tidak crash
-    if (!id_backup) return false; 
-
     const db = await buatKoneksi();
-    
-    // Menggunakan teknik query binding (?) jauh lebih aman daripada memasukkan variabel langsung
-    sql = `SELECT * FROM backup_transaksi WHERE id_backup = ? ORDER BY tgl_jam`;
-    
-    try {
-        const [rows] = await db.execute(sql, [id_backup]);
-        await db.end(); // <-- WAJIB: Menutup koneksi database di Vercel
-        return rows.length > 0 ? rows : false;
-    } catch (err) {
-        console.log(err);
-        await db.end(); // <-- Jika error, koneksi tetap harus ditutup
-        return false;
-    }
+    sql = `SELECT * FROM backup_transaksi WHERE id_backup = '${id_backup}' ORDER BY tgl_jam`;
+    const [rows] = await db.execute(sql);
+    return rows.length > 0 ? rows : false;
 }
 
 module.exports = {
